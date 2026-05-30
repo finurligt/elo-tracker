@@ -5,6 +5,7 @@ export default {
   out: "./drizzle/migrations",
   dialect: "turso",
   dbCredentials: {
-    url: "file:./data/elo.db",
+    url: process.env.TURSO_DATABASE_URL ?? "file:./data/elo.db",
+    authToken: process.env.TURSO_AUTH_TOKEN,
   },
 } satisfies Config;
