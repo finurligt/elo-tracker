@@ -51,7 +51,7 @@ export default async function MatchesPage({
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {allMatches.map((match) => (
+          {allMatches.map((match, idx) => (
             <Card key={match.id}>
               <CardBody>
                 <div className="flex items-start justify-between gap-4">
@@ -96,7 +96,7 @@ export default async function MatchesPage({
                       ))}
                     </div>
                   </div>
-                  <DeleteMatchButton matchId={match.id} />
+                  <DeleteMatchButton matchId={match.id} isLatest={idx === 0} />
                 </div>
               </CardBody>
             </Card>

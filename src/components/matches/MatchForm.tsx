@@ -27,6 +27,11 @@ export function MatchForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
+  const [playedAt, setPlayedAt] = useState(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  });
 
   const [teams, setTeams] = useState<Team[]>(
     matchType === "ffa"
@@ -59,9 +64,15 @@ export function MatchForm({
   }
 
   function setFfaPlayer(teamIdx: number, playerId: string) {
-    setTeams((prev) =>
-      prev.map((t, i) => (i === teamIdx ? { ...t, playerIds: [playerId] } : t))
-    );
+    setTeams((prev) => {
+      const conflictIdx = prev.findIndex((t) => t.playerIds[0] === playerId);
+      const displaced = prev[teamIdx].playerIds[0];
+      return prev.map((t, i) => {
+        if (i === teamIdx) return { ...t, playerIds: [playerId] };
+        if (i === conflictIdx) return { ...t, playerIds: [displaced] };
+        return t;
+      });
+    });
   }
 
   function setFfaPlacement(teamIdx: number, placement: number) {
@@ -110,16 +121,24 @@ export function MatchForm({
   }
 
   function setTeamPlayer(teamIdx: number, playerIdx: number, playerId: string) {
-    setTeams((prev) =>
-      prev.map((t, i) =>
-        i === teamIdx
-          ? {
-              ...t,
-              playerIds: t.playerIds.map((pid, pi) => (pi === playerIdx ? playerId : pid)),
-            }
-          : t
-      )
-    );
+    setTeams((prev) => {
+      const displaced = prev[teamIdx].playerIds[playerIdx];
+      // Find where the selected player currently lives
+      const conflictTeamIdx = prev.findIndex((t) => t.playerIds.includes(playerId));
+      const conflictPlayerIdx = conflictTeamIdx !== -1
+        ? prev[conflictTeamIdx].playerIds.indexOf(playerId)
+        : -1;
+
+      return prev.map((t, i) => {
+        if (i === teamIdx) {
+          return { ...t, playerIds: t.playerIds.map((pid, pi) => (pi === playerIdx ? playerId : pid)) };
+        }
+        if (i === conflictTeamIdx && conflictPlayerIdx !== -1) {
+          return { ...t, playerIds: t.playerIds.map((pid, pi) => (pi === conflictPlayerIdx ? displaced : pid)) };
+        }
+        return t;
+      });
+    });
   }
 
   function setTeamPlacement(teamIdx: number, placement: number) {
@@ -145,7 +164,7 @@ export function MatchForm({
     }
 
     startTransition(async () => {
-      const result = await recordMatch(leagueId, teams, notes);
+      const result = await recordMatch(leagueId, teams, notes, new Date(playedAt));
       if (result?.error) {
         setError(result.error);
       } else {
@@ -181,7 +200,6 @@ export function MatchForm({
                   <option
                     key={p.id}
                     value={p.id}
-                    disabled={usedPlayerIds.has(p.id) && !team.playerIds.includes(p.id)}
                   >
                     {p.name} ({p.elo})
                   </option>
@@ -202,12 +220,20 @@ export function MatchForm({
           </Button>
         )}
 
-        <Input
-          label="Notes (optional)"
-          placeholder="e.g. overtime, rematch…"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Date & time"
+            type="datetime-local"
+            value={playedAt}
+            onChange={(e) => setPlayedAt(e.target.value)}
+          />
+          <Input
+            label="Notes (optional)"
+            placeholder="e.g. overtime, rematch…"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -269,7 +295,6 @@ export function MatchForm({
                         <option
                           key={p.id}
                           value={p.id}
-                          disabled={usedInOtherTeams.has(p.id) || (team.playerIds.includes(p.id) && p.id !== pid)}
                         >
                           {p.name} ({p.elo})
                         </option>
@@ -308,12 +333,20 @@ export function MatchForm({
         </Button>
       )}
 
-      <Input
-        label="Notes (optional)"
-        placeholder="e.g. tournament round 1…"
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Date & time"
+          type="datetime-local"
+          value={playedAt}
+          onChange={(e) => setPlayedAt(e.target.value)}
+        />
+        <Input
+          label="Notes (optional)"
+          placeholder="e.g. tournament round 1…"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+      </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

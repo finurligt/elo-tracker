@@ -18,6 +18,18 @@ export async function createPlayer(formData: FormData) {
   revalidatePath("/players");
 }
 
+export async function updatePlayer(playerId: string, name: string) {
+  if (!name?.trim()) return { error: "Name is required" };
+
+  await db
+    .update(players)
+    .set({ name: name.trim() })
+    .where(eq(players.id, playerId));
+
+  revalidatePath("/players");
+  revalidatePath(`/players/${playerId}`);
+}
+
 export async function addPlayerToLeague(leagueId: string, playerId: string) {
   const league = await db.query.leagues.findFirst({
     where: eq(leagues.id, leagueId),

@@ -26,10 +26,20 @@ export default async function LeagueLayout({
           <Link href="/leagues" className="text-xs text-indigo-600 hover:underline">
             ← Leagues
           </Link>
-          <h1 className="text-xl font-bold text-gray-900 mt-1">{league.name}</h1>
-          {league.description && (
-            <p className="text-sm text-gray-500 mt-0.5">{league.description}</p>
-          )}
+          <div className="flex items-start justify-between gap-2 mt-1">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{league.name}</h1>
+              {league.description && (
+                <p className="text-sm text-gray-500 mt-0.5">{league.description}</p>
+              )}
+            </div>
+            <Link
+              href={`/leagues/${leagueId}/edit`}
+              className="text-xs text-gray-400 hover:text-gray-600 mt-1 shrink-0"
+            >
+              Edit
+            </Link>
+          </div>
         </div>
       </div>
       <LeagueSubNav leagueId={leagueId} />

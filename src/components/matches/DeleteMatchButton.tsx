@@ -4,11 +4,21 @@ import { useTransition } from "react";
 import { deleteMatch } from "@/actions/matches";
 import { Button } from "@/components/ui/Button";
 
-export function DeleteMatchButton({ matchId }: { matchId: string }) {
+export function DeleteMatchButton({
+  matchId,
+  isLatest,
+}: {
+  matchId: string;
+  isLatest: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!confirm("Undo this match? ELO changes will be reverted.")) return;
+    const message = isLatest
+      ? "Undo this match? ELO changes will be reverted."
+      : "⚠️ This is not the latest match. Undoing it will revert its ELO changes but won't fix later matches that were calculated on top of it. Continue?";
+
+    if (!confirm(message)) return;
     startTransition(() => {
       deleteMatch(matchId);
     });

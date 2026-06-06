@@ -7,13 +7,16 @@ import { Button } from "@/components/ui/Button";
 export function RemovePlayerButton({
   leagueId,
   playerId,
+  playerName,
 }: {
   leagueId: string;
   playerId: string;
+  playerName: string;
 }) {
   const [isPending, startTransition] = useTransition();
 
   function handleRemove() {
+    if (!confirm(`Remove ${playerName} from this league? Their match history will be preserved.`)) return;
     startTransition(() => {
       removePlayerFromLeague(leagueId, playerId);
     });

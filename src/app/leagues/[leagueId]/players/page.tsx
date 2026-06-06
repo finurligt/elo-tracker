@@ -50,7 +50,7 @@ export default async function LeaguePlayersPage({
                     <td className="px-4 py-3 text-right tabular-nums font-bold">{member.elo}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-gray-500">{member.gamesPlayed}</td>
                     <td className="px-4 py-3 text-right">
-                      <RemovePlayerButton leagueId={leagueId} playerId={member.playerId} />
+                      <RemovePlayerButton leagueId={leagueId} playerId={member.playerId} playerName={member.player.name} />
                     </td>
                   </tr>
                 ))}

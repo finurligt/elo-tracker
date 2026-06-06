@@ -27,7 +27,8 @@ function getOutcome(
 export async function recordMatch(
   leagueId: string,
   teams: TeamInput[],
-  notes?: string
+  notes?: string,
+  playedAt?: Date
 ) {
   const league = await db.query.leagues.findFirst({
     where: eq(leagues.id, leagueId),
@@ -70,6 +71,7 @@ export async function recordMatch(
     id: matchId,
     leagueId,
     notes: notes?.trim() || null,
+    ...(playedAt ? { playedAt } : {}),
   });
 
   for (let i = 0; i < teams.length; i++) {

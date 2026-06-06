@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { formatDate, formatEloChange } from "@/lib/utils";
+import { EditPlayerName } from "@/components/players/EditPlayerName";
+import { EloHistoryChart } from "@/components/players/EloHistoryChartWrapper";
 
 export default async function PlayerProfilePage({
   params,
@@ -54,13 +56,35 @@ export default async function PlayerProfilePage({
     r.match.teams.sort((a, b) => a.placement - b.placement)
   );
 
+  // Build ELO history chart data (chronological order)
+  const chronological = [...memberRecords].reverse();
+  const leagueNames = [...new Set(chronological.map((r) => r.match.league.name))];
+  const chartData: { date: string; [k: string]: number | string }[] = [];
+
+  for (const record of chronological) {
+    const leagueName = record.match.league.name;
+    const date = new Date(record.match.playedAt as Date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+
+    // Add starting point once per league
+    if (!chartData.some((p) => p[leagueName] !== undefined)) {
+      chartData.push({ date, [leagueName]: record.eloBefore });
+    }
+    chartData.push({ date, [leagueName]: record.eloAfter });
+  }
+
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
         <Link href="/players" className="text-sm text-indigo-600 hover:underline">
           ← Players
         </Link>
-        <h1 className="text-2xl font-bold mt-1">{player.name}</h1>
+        <div className="flex items-center gap-1 mt-1">
+          <h1 className="text-2xl font-bold">{player.name}</h1>
+          <EditPlayerName playerId={player.id} currentName={player.name} />
+        </div>
       </div>
 
       {/* League ratings */}
@@ -97,6 +121,18 @@ export default async function PlayerProfilePage({
                 ))}
               </tbody>
             </table>
+          </Card>
+        </div>
+      )}
+
+      {/* ELO history chart */}
+      {memberRecords.length > 0 && (
+        <div className="mb-6">
+          <h2 className="font-semibold text-gray-900 mb-3">ELO history</h2>
+          <Card>
+            <CardBody>
+              <EloHistoryChart data={chartData} leagues={leagueNames} />
+            </CardBody>
           </Card>
         </div>
       )}

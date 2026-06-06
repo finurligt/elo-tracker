@@ -27,6 +27,26 @@ export async function createLeague(formData: FormData) {
   revalidatePath("/leagues");
 }
 
+export async function updateLeague(leagueId: string, formData: FormData) {
+  const name = formData.get("name") as string;
+  const description = (formData.get("description") as string) || null;
+  const kFactor = parseInt((formData.get("kFactor") as string) || "32", 10);
+
+  if (!name?.trim()) return { error: "Name is required" };
+
+  await db
+    .update(leagues)
+    .set({
+      name: name.trim(),
+      description: description?.trim() || null,
+      kFactor,
+    })
+    .where(eq(leagues.id, leagueId));
+
+  revalidatePath("/leagues");
+  revalidatePath(`/leagues/${leagueId}`);
+}
+
 export async function deleteLeague(leagueId: string) {
   await db.delete(leagues).where(eq(leagues.id, leagueId));
   revalidatePath("/leagues");
